@@ -1,5 +1,6 @@
 FROM python:3
 
 FROM python:3
-WORKDIR /usr/src/app
-CMD [ "python", "./app-server.py.py" ]
+WORKDIR /app
+COPY . /app/
+CMD [ "python", "app-server.py" ]
