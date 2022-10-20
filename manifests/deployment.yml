@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: "assentify-0a42"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "assentify-0a42"
+  template:
+    metadata:
+      labels:
+        app: "assentify-0a42"
+    spec:
+      containers:
+        - name: "assentify-0a42"
+          image: "assentifyplatform1.azurecr.io/assentify"
+          ports:
+          - containerPort: 80
