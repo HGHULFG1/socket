@@ -40,7 +40,7 @@ def start_connection(host, port, request):
 #     print(f"Usage: {sys.argv[0]} <host> <port> <action> <value>")
 #     sys.exit(1)
 
-host, port = '127.0.0.1', 12345
+host, port = '0.0.0.0', 12001
 action, value = 'search', 'morpheus'
 request = create_request(action, value)
 start_connection(host, port, request)
