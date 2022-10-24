@@ -50,5 +50,5 @@ try:
                     message.close()
 except KeyboardInterrupt:
     print("Caught keyboard interrupt, exiting")
-finally:
-    sel.close()
+# finally:
+#     sel.close()
