@@ -60,8 +60,8 @@ class Message:
             else:
                 pass
                 # Close when the buffer is drained. The response has been sent.
-                # if sent and not self._send_buffer:
-                #     self.close()
+                if sent and not self._send_buffer:
+                    self.close()
 
     def _json_encode(self, obj, encoding):
         return json.dumps(obj, ensure_ascii=False).encode(encoding)
