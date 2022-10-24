@@ -58,7 +58,6 @@ class Message:
                 # Resource temporarily unavailable (errno EWOULDBLOCK)
                 pass
             else:
-                pass
                 # Close when the buffer is drained. The response has been sent.
                 if sent and not self._send_buffer:
                     self.close()
