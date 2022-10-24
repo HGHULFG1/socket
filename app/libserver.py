@@ -58,7 +58,7 @@ class Message:
                 # Resource temporarily unavailable (errno EWOULDBLOCK)
                 pass
             else:
-                self._send_buffer = self._send_buffer[sent:]
+                pass
                 # Close when the buffer is drained. The response has been sent.
                 # if sent and not self._send_buffer:
                 #     self.close()
@@ -200,7 +200,7 @@ class Message:
                 f"request from {self.addr}"
             )
         # Set selector to listen for write events, we're done reading.
-        # self._set_selector_events_mask("w")
+        self._set_selector_events_mask("w")
 
     def create_response(self):
         if self.jsonheader["content-type"] == "text/json":
