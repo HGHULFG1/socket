@@ -200,7 +200,7 @@ class Message:
                 f"request from {self.addr}"
             )
         # Set selector to listen for write events, we're done reading.
-        self._set_selector_events_mask("w")
+        # self._set_selector_events_mask("w")
 
     def create_response(self):
         if self.jsonheader["content-type"] == "text/json":
