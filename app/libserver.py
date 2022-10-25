@@ -94,8 +94,8 @@ class Message:
     def _create_response_json_content(self):
         action = self.request.get("action")
         print(self.request)
-        if self.request.get('file-content-length', False):
-            file = self._recv_buffer[self.request['content-length']+1: self.request.get('file-content-length', False)]
+        if self.request.get('file_length', False):
+            file = self._recv_buffer[self.request['content-length']+1: self.request.get('file_length', False)]
             print(file)
 
         if action == "search":
