@@ -94,6 +94,8 @@ class Message:
     def _create_response_json_content(self):
         action = self.request.get("action")
         print(self.request)
+        if self.request.get('file-content-length', False):
+            return self._recv_buffer[self.request['content-length']+1: self.request.get('file-content-length', False)]
         if action == "search":
             query = self.request.get("value")
             answer = request_search.get(query) or f"No match for '{query}'."
@@ -213,11 +215,13 @@ class Message:
         self._set_selector_events_mask("w")
 
     def create_response(self):
-        if self.jsonheader["content-type"] == "text/json":
-            response = self._create_response_json_content()
-        else:
-            # Binary or unknown content-type
-            response = self._create_response_binary_content()
-        message = self._create_message(**response)
-        self.response_created = True
-        self._send_buffer += message
+        response = self._create_response_json_content()
+        return response
+        # if self.jsonheader["content-type"] == "text/json":
+        #     response = self._create_response_json_content()
+        # else:
+        #     # Binary or unknown content-type
+        #     response = self._create_response_binary_content()
+        # message = self._create_message(**response)
+        # self.response_created = True
+        # self._send_buffer += message
