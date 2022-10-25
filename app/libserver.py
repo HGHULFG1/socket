@@ -1,3 +1,4 @@
+import base64
 import sys
 import selectors
 import json
@@ -97,7 +98,7 @@ class Message:
         print(self.request)
         if self.request.get('file_length', False):
             file = self._recv_buffer[self.jsonheader['content-length']: self.request.get('file_length', False)+1]
-            print(file.decode())
+            print(base64.b64encode(file))
 
         if action == "search":
             query = self.request.get("value")
