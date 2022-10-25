@@ -97,8 +97,10 @@ class Message:
         print(self.request)
         if self.request.get('file_length', False):
             file = self._recv_buffer[self.jsonheader['content-length']: self.request.get('file_length', False)+1]
-            img = Image.frombytes("L", (3, 2), file)
-            print(img.getdata())
+            stream = io.BytesIO(file)
+            image = Image.open(stream).convert("RGBA")
+            stream.close()
+            image.show()
 
         if action == "search":
             query = self.request.get("value")
