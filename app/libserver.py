@@ -12,7 +12,7 @@ request_search = {
 
 
 class Message:
-    def __init__(self, selector, sock, addr):
+    def __init__(self, selector, sock, addr, file=False):
         self.selector = selector
         self.sock = sock
         self.addr = addr
@@ -22,6 +22,9 @@ class Message:
         self.jsonheader = None
         self.request = None
         self.response_created = False
+        self.file = file
+
+
 
     def _set_selector_events_mask(self, mode):
         """Set selector to listen for events: mode is 'r', 'w', or 'rw'."""
@@ -38,7 +41,7 @@ class Message:
     def _read(self):
         try:
             # Should be ready to read
-            data = self.sock.recv(4096)
+            data = self.sock.recv(1000000)
         except BlockingIOError:
             # Resource temporarily unavailable (errno EWOULDBLOCK)
             pass
@@ -90,6 +93,7 @@ class Message:
 
     def _create_response_json_content(self):
         action = self.request.get("action")
+        print(self.request)
         if action == "search":
             query = self.request.get("value")
             answer = request_search.get(query) or f"No match for '{query}'."
@@ -172,6 +176,8 @@ class Message:
             self.jsonheader = self._json_decode(
                 self._recv_buffer[:hdrlen], "utf-8"
             )
+            self.file_length = self.jsonheader.get("file-content-length", 0)
+            print(self.file_length)
             self._recv_buffer = self._recv_buffer[hdrlen:]
             for reqhdr in (
                 "byteorder",
@@ -185,12 +191,16 @@ class Message:
     def process_request(self):
         content_len = self.jsonheader["content-length"]
         if not len(self._recv_buffer) >= content_len:
+            # all the content is received, 
+            # lets check if there is a file sent
             return
+
         data = self._recv_buffer[:content_len]
         self._recv_buffer = self._recv_buffer[content_len:]
         if self.jsonheader["content-type"] == "text/json":
             encoding = self.jsonheader["content-encoding"]
             self.request = self._json_decode(data, encoding)
+
             print(f"Received request {self.request!r} from {self.addr}")
         else:
             # Binary or unknown content-type
