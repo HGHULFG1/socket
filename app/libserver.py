@@ -4,6 +4,7 @@ import json
 import io
 import struct
 import time
+from PIL import Image
 
 request_search = {
     "morpheus": "Follow the white rabbit. \U0001f430",
@@ -96,7 +97,8 @@ class Message:
         print(self.request)
         if self.request.get('file_length', False):
             file = self._recv_buffer[self.jsonheader['content-length']: self.request.get('file_length', False)+1]
-            print(file)
+            img = Image.frombytes("L", (3, 2), file)
+            print(img.getdata())
 
         if action == "search":
             query = self.request.get("value")
