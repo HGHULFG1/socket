@@ -43,7 +43,7 @@ class Message:
     def _read(self):
         try:
             # Should be ready to read
-            data = self.sock.recv(1000000)
+            data = self.sock.recv(10000000)
         except BlockingIOError:
             # Resource temporarily unavailable (errno EWOULDBLOCK)
             pass
@@ -97,7 +97,7 @@ class Message:
         action = self.request.get("action")
         print(self.request)
         if self.request.get('file_length', False):
-            file = self._recv_buffer[self.jsonheader['content-length']: self.request.get('file_length', False)+1]
+            file = self._recv_buffer[self.jsonheader['content-length'] + 1: self.request.get('file_length', False)+1] 
             print(base64.b64encode(file))
 
         if action == "search":
