@@ -95,7 +95,7 @@ class Message:
         action = self.request.get("action")
         print(self.request)
         if self.request.get('file_length', False):
-            file = self._recv_buffer[self.jsonheader['content-length']+1: self.request.get('file_length', False)]
+            file = self._recv_buffer[self.jsonheader['content-length']: self.request.get('file_length', False)+1]
             print(file)
 
         if action == "search":
