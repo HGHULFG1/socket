@@ -4,31 +4,29 @@ import sys
 import socket
 import selectors
 import traceback
+from server_message import Message
 
-import libserver
+from config import PORT, HOST
 
 sel = selectors.DefaultSelector()
 
 
 def accept_wrapper(sock):
+    """accepts the connection on the server socket and register to read the message from the client"""
     conn, addr = sock.accept()  # Should be ready to read
     print(f"Accepted connection from {addr}")
     conn.setblocking(False)
-    message = libserver.Message(sel, conn, addr)
+    message = Message(sel, conn, addr)
     sel.register(conn, selectors.EVENT_READ, data=message)
 
 
-if len(sys.argv) != 3:
-    print(f"Usage: {sys.argv[0]} <host> <port>")
-    sys.exit(1)
+host, port = HOST, PORT
 
-host, port = '0.0.0.0', 12001
 lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Avoid bind() exception: OSError: [Errno 48] Address already in use
 lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 lsock.bind((host, port))
 lsock.listen()
-print(f"Listening on {(host, port)}")
 lsock.setblocking(False)
 sel.register(lsock, selectors.EVENT_READ, data=None)
 

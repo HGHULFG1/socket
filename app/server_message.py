@@ -1,17 +1,10 @@
+
 import base64
-import sys
-import selectors
 import json
+import selectors
 import io
 import struct
-import time
-from PIL import Image
-
-request_search = {
-    "morpheus": "Follow the white rabbit. \U0001f430",
-    "ring": "In the caves beneath the Misty Mountains. \U0001f48d",
-}
-
+import sys
 
 class Message:
     def __init__(self, selector, sock, addr, file=False):
@@ -43,7 +36,12 @@ class Message:
     def _read(self):
         try:
             # Should be ready to read
-            data = self.sock.recv(10000000)
+            while True:
+                data = self.sock.recv(1024) # 1048576
+                if not data:
+                    break
+                self._recv_buffer += data
+
         except BlockingIOError:
             # Resource temporarily unavailable (errno EWOULDBLOCK)
             pass
@@ -55,7 +53,6 @@ class Message:
 
     def _write(self):
         if self._send_buffer:
-            print(f"Sending {self._send_buffer!r} to {self.addr}")
             try:
                 # Should be ready to write
                 sent = self.sock.send(self._send_buffer)
@@ -66,7 +63,7 @@ class Message:
                 self._send_buffer = self._send_buffer[sent:]
                 # Close when the buffer is drained. The response has been sent.
                 if sent and not self._send_buffer:
-                    self.close()
+                    self._set_selector_events_mask("r")
 
     def _json_encode(self, obj, encoding):
         return json.dumps(obj, ensure_ascii=False).encode(encoding)
@@ -93,35 +90,23 @@ class Message:
         message = message_hdr + jsonheader_bytes + content_bytes
         return message
 
+    def get_result(self, data):
+        return {
+            'error': 'no error',
+            'status': 'success',
+            'data': data
+        }
+
     def _create_response_json_content(self):
         action = self.request.get("action")
-        print(self.request)
-        if self.request.get('file_length', False):
-            file = self._recv_buffer[self.jsonheader['content-length'] + 1: self.request.get('file_length', False)+1] 
-            print(base64.b64encode(file))
-
-        if action == "search":
-            query = self.request.get("value")
-            answer = request_search.get(query) or f"No match for '{query}'."
-            content = {"result": answer}
-        else:
-            content = {"result": f"Error: invalid action '{action}'."}
+        answer = self.get_result(action)
+        content = dict(result=answer)
         content_encoding = "utf-8"
-        response = {
+        return {
             "content_bytes": self._json_encode(content, content_encoding),
             "content_type": "text/json",
             "content_encoding": content_encoding,
         }
-        return response
-
-    def _create_response_binary_content(self):
-        response = {
-            "content_bytes": b"First 10 bytes of request: "
-            + self.request[:10],
-            "content_type": "binary/custom-server-binary-type",
-            "content_encoding": "binary",
-        }
-        return response
 
     def process_events(self, mask):
         if mask & selectors.EVENT_READ:
@@ -182,7 +167,7 @@ class Message:
             self.jsonheader = self._json_decode(
                 self._recv_buffer[:hdrlen], "utf-8"
             )
-            self.file_length = self.jsonheader.get("file-content-length", 0)
+            self.file_length = self.jsonheader.get("content-image-length", 0)
             print(self.file_length)
             self._recv_buffer = self._recv_buffer[hdrlen:]
             for reqhdr in (
@@ -203,32 +188,21 @@ class Message:
 
         data = self._recv_buffer[:content_len]
         self._recv_buffer = self._recv_buffer[content_len:]
+        file_data = self._recv_buffer
         if self.jsonheader["content-type"] == "text/json":
             encoding = self.jsonheader["content-encoding"]
             self.request = self._json_decode(data, encoding)
 
             print(f"Received request {self.request!r} from {self.addr}")
+            print(len(file_data))
         else:
             # Binary or unknown content-type
             self.request = data
-            print(
-                f"Received {self.jsonheader['content-type']} "
-                f"request from {self.addr}"
-            )
         # Set selector to listen for write events, we're done reading.
         self._set_selector_events_mask("w")
 
     def create_response(self):
-        # response = self._create_response_json_content()
-        # message = self._create_message(**response)
-        # self.response_created = True
-        # self._send_buffer += response
-        # return response
-        if self.jsonheader["content-type"] == "text/json":
-            response = self._create_response_json_content()
-        else:
-            # Binary or unknown content-type
-            response = self._create_response_binary_content()
+        response = self._create_response_json_content()
         message = self._create_message(**response)
         self.response_created = True
         self._send_buffer += message
