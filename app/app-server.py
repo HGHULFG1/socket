@@ -5,7 +5,8 @@ import socket
 import selectors
 import traceback
 from server_message import Message
-
+import logging
+logging.basicConfig(filename="log.txt", level=logging.DEBUG)
 from config import PORT, HOST
 
 sel = selectors.DefaultSelector()
@@ -14,6 +15,7 @@ sel = selectors.DefaultSelector()
 def accept_wrapper(sock):
     """accepts the connection on the server socket and register to read the message from the client"""
     conn, addr = sock.accept()  # Should be ready to read
+    logging.DEBUG(f"Accepted From {addr}")
     print(f"Accepted connection from {addr}")
     conn.setblocking(False)
     message = Message(sel, conn, addr)
