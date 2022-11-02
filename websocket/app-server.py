@@ -5,6 +5,11 @@ async def echo(websocket):
     while 1:
         async for message in websocket:
             print(message)
+            if isinstance(message, dict):
+                if message.get('data', None):
+                    await websocket.send(
+                        {'enroll': True}
+                    )
             if message == 'exit':
                 break
             await websocket.send('message')
