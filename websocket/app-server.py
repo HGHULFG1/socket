@@ -4,6 +4,7 @@ import websockets
 async def echo(websocket):
     while 1:
         async for message in websocket:
+            print(message)
             if message == 'exit':
                 break
             await websocket.send('message')
